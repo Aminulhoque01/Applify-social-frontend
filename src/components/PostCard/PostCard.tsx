@@ -5,11 +5,17 @@ import { useToggleLikeMutation } from "@/src/redux/services/likeApi";
 import CommentSection from "../CommentSection/CommentSection";
 import { Heart, MessageCircle } from "lucide-react";
 import Image from "next/image";
+import { useState } from "react";
 
 export default function PostCard({ post }: any) {
   const [toggleLike, { isLoading }] = useToggleLikeMutation();
+  
+
+  const [liked, setLiked] = useState(post.isLiked);  
 
   const handleLike = async () => {
+    setLiked(!liked);
+
     try {
       await toggleLike({
         targetId: post._id,
@@ -17,6 +23,7 @@ export default function PostCard({ post }: any) {
       });
     } catch (error) {
       console.error(error);
+      setLiked(liked);  
     }
   };
 
@@ -47,7 +54,12 @@ export default function PostCard({ post }: any) {
             disabled={isLoading}
             className="flex items-center gap-2 text-gray-600 hover:text-red-500 transition duration-200"
           >
-            <Heart size={20} />
+                <Heart
+                    size={20}
+                    className={`transition ${
+                        liked ? "text-red-500 fill-red-500" : "text-gray-600"
+                    }`}
+                />
             <span className="font-medium">Like</span>
           </button>
 
