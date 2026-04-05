@@ -2,19 +2,20 @@ import { baseApi } from "../api/baseApi";
 
 
 export const postApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     getPosts: builder.query({
-      query: () => "/posts",
-      providesTags: ["Post"],
+      query: () => "/post",
+      providesTags: ["post"],
     }),
 
     createPost: builder.mutation({
       query: (data) => ({
-        url: "/posts",
+        url: "/post",
         method: "POST",
         body: data,
       }),
-      invalidatesTags: ["Post"],
+      invalidatesTags: ["post"],
     }),
   }),
 });

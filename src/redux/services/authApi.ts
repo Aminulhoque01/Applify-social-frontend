@@ -3,6 +3,7 @@ import { baseApi } from "../api/baseApi";
  
 
 export const authApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     register: builder.mutation({
       query: (data) => ({

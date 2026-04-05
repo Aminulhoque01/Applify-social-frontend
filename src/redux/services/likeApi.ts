@@ -3,14 +3,15 @@ import { baseApi } from "../api/baseApi";
  
 
 export const likeApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     toggleLike: builder.mutation({
       query: (data) => ({
-        url: "/likes",
+        url: "/like",
         method: "POST",
         body: data,
       }),
-      invalidatesTags: ["Post", "Comment", "Like"],
+      invalidatesTags: ["post", "comment", "Like"],
     }),
 
     getLikes: builder.query({

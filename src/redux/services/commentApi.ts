@@ -1,23 +1,27 @@
 import { baseApi } from "../api/baseApi";
 
+ 
 
 export const commentApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
-    getComments: builder.query({
-      query: (postId) => `/comments/${postId}`,
-      providesTags: ["Comment"],
+    createComment: builder.mutation({
+      query: ({ postId, text }) => ({
+        url: `/comment/${postId}`,
+        method: "POST",
+        body: { text },
+      }),
+      invalidatesTags: ["comment"],
     }),
 
-    createComment: builder.mutation({
-      query: (data) => ({
-        url: "/comments",
-        method: "POST",
-        body: data,
-      }),
-      invalidatesTags: ["Comment"],
+    getComments: builder.query({
+      query: (postId) => `/comment/${postId}`,
+      providesTags: ["comment"],
     }),
   }),
 });
 
-export const { useGetCommentsQuery, useCreateCommentMutation } =
-  commentApi;
+export const {
+  useCreateCommentMutation,
+  useGetCommentsQuery,
+} = commentApi;

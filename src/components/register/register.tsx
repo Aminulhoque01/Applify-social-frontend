@@ -1,16 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useLoginMutation } from "@/src/redux/services/authApi";
+import { useRegisterMutation } from "@/src/redux/services/authApi";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
-export default function Login() {
-  const [login, { isLoading }] = useLoginMutation();
+export default function Register() {
+  const [register, { isLoading }] = useRegisterMutation();
   const router = useRouter();
 
   const [form, setForm] = useState({
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
   });
@@ -19,11 +21,11 @@ export default function Login() {
 
   const submit = async () => {
     try {
-      const res: any = await login(form);
+      const res: any = await register(form);
 
       if (res?.data) {
         localStorage.setItem("token", res.data.data.token);
-        router.push("/");
+        router.push("/feed");
       }
     } catch (err) {
       console.log(err);
@@ -32,16 +34,43 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-sky-200 to-white">
-      
       <div className="w-[360px] bg-white/70 backdrop-blur-xl shadow-xl rounded-3xl p-8 border">
         
         {/* Title */}
-        <h2 className="text-xl font-semibold text-center text-gray-800">
-          Sign in with email
+        <h2 className="text-xl font-semibold text-center text-gray-800 ">
+          Create an account
         </h2>
 
-        {/* Email */}
+        {/* First Name */}
         <div className="mt-5">
+          <label className="text-sm text-gray-600">First Name</label>
+          <input
+            type="text"
+            placeholder="Enter first name"
+            value={form.firstName}
+            onChange={(e) =>
+              setForm({ ...form, firstName: e.target.value })
+            }
+            className="w-full mt-1 px-4 py-2 rounded-lg bg-gray-100 border focus:outline-none focus:ring-2 focus:ring-gray-300"
+          />
+        </div>
+
+        {/* Last Name */}
+        <div className="mt-4">
+          <label className="text-sm text-gray-600">Last Name</label>
+          <input
+            type="text"
+            placeholder="Enter last name"
+            value={form.lastName}
+            onChange={(e) =>
+              setForm({ ...form, lastName: e.target.value })
+            }
+            className="w-full mt-1 px-4 py-2 rounded-lg bg-gray-100 border focus:outline-none focus:ring-2 focus:ring-gray-300"
+          />
+        </div>
+
+        {/* Email */}
+        <div className="mt-4">
           <label className="text-sm text-gray-600">Email</label>
           <input
             type="email"
@@ -76,28 +105,23 @@ export default function Login() {
           </span>
         </div>
 
-        {/* Forgot */}
-        <div className="text-right text-xs text-gray-500 mt-2 cursor-pointer hover:underline">
-          Forgot password?
-        </div>
-
         {/* Button */}
         <button
           onClick={submit}
           disabled={isLoading}
           className="w-full mt-5 bg-gray-900 text-white py-2 rounded-lg hover:opacity-90"
         >
-          {isLoading ? "Signing in..." : "Get Started"}
+          {isLoading ? "Creating account..." : "Register"}
         </button>
 
         {/* Footer */}
         <p className="text-xs text-center text-gray-500 mt-5">
-          Don’t have an account?{" "}
+          Already have an account?{" "}
           <span
-            onClick={() => router.push("/register")}
+            onClick={() => router.push("/login")}
             className="text-gray-800 font-medium cursor-pointer hover:underline"
           >
-            Sign up
+            Sign in
           </span>
         </p>
       </div>
