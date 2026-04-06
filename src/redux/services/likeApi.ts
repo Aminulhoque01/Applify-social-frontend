@@ -11,12 +11,12 @@ export const likeApi = baseApi.injectEndpoints({
         method: "POST",
         body: data,
       }),
-      invalidatesTags: ["post", "comment", "Like"],
+      invalidatesTags: ["post", "comment", ],
     }),
 
     getLikes: builder.query({
       query: ({ targetId, targetType }) =>
-        `/likes?targetId=${targetId}&targetType=${targetType}`,
+        `/like?targetId=${targetId}&targetType=${targetType}`,
     }),
   }),
 });

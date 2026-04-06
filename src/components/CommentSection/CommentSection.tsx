@@ -11,13 +11,14 @@ import { Heart } from "lucide-react";
 import Image from "next/image";
 
 export default function CommentSection({ postId }: any) {
-  const { data, isLoading } = useGetCommentsQuery(postId);
+  const { data, isLoading, refetch } = useGetCommentsQuery(postId);
   const [createComment] = useCreateCommentMutation();
   const [toggleLike] = useToggleLikeMutation();
 
-  const [text, setText] = useState("");
+  const [text, setText] = useState(""); // main comment input
+  const [replyText, setReplyText] = useState<any>({}); // replies per comment
 
-  // ✅ Time Ago Function
+  // Time ago function
   const formatTime = (dateString: string) => {
     const now = new Date();
     const date = new Date(dateString);
@@ -29,20 +30,49 @@ export default function CommentSection({ postId }: any) {
     return `${Math.floor(diff / 86400)}d ago`;
   };
 
-  // ✅ Create Comment
+  // Create Comment
   const handleComment = async () => {
     if (!text.trim()) return;
-    await createComment({ postId, text });
-    setText("");
+    try {
+      await createComment({ postId, text }).unwrap();
+      setText("");
+      refetch();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  // ✅ Toggle Like (comment / reply)
+  // Create Reply
+ const handleReply = async (parentCommentId: string) => {
+  const reply = replyText[parentCommentId];
+  if (!reply?.trim()) return;
+
+  try {
+    // Include parent comment user name in text (optional)
+    const parentComment = data?.data?.find((c: any) => c._id === parentCommentId);
+    const parentUserName = parentComment ? parentComment.user.firstName : "";
+
+    await createComment({
+      postId,
+      text: `@${parentUserName} ${reply}`, // mention original commenter
+      parentComment: parentCommentId,
+    }).unwrap();
+
+    setReplyText({ ...replyText, [parentCommentId]: "" });
+    refetch();
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+  // Toggle Like
   const handleLike = async (id: string, type: "comment" | "reply") => {
     try {
       await toggleLike({
         targetId: id,
         targetType: type,
-      });
+      }).unwrap();
+      refetch();
     } catch (error) {
       console.error(error);
     }
@@ -55,7 +85,7 @@ export default function CommentSection({ postId }: any) {
         Comments
       </h2>
 
-      {/* Input */}
+      {/* Input for main comment */}
       <div className="flex items-center gap-3 mb-6">
         <input
           className="flex-1 bg-gray-100 px-4 py-2 rounded-full outline-none focus:ring-2 focus:ring-blue-400"
@@ -63,7 +93,6 @@ export default function CommentSection({ postId }: any) {
           value={text}
           onChange={(e) => setText(e.target.value)}
         />
-
         <button
           onClick={handleComment}
           className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-full transition"
@@ -72,7 +101,6 @@ export default function CommentSection({ postId }: any) {
         </button>
       </div>
 
-      {/* Loading */}
       {isLoading && <p className="text-gray-500">Loading...</p>}
 
       {/* Comments */}
@@ -81,12 +109,12 @@ export default function CommentSection({ postId }: any) {
           <div key={c._id} className="flex gap-3">
             {/* Avatar */}
             <div className="w-9 h-9 rounded-full bg-blue-400 flex items-center justify-center text-white font-bold">
-               <Image
-                src={c.user?.profileImage }
-                width={45}
-                height={45}
+              <Image
+                src={c.user?.profileImage || "/default.png"}
+                width={36}
+                height={36}
                 alt="profile"
-                className="rounded-full object-cover w-11 h-11"
+                className="rounded-full object-cover w-9 h-9"
               />
             </div>
 
@@ -94,14 +122,13 @@ export default function CommentSection({ postId }: any) {
             <div className="flex-1">
               <div className="bg-gray-100 p-3 rounded-2xl">
                 <p className="text-sm font-semibold text-gray-800">
-                  {c.user?.firstName } {c.user?.lastName }
+                  {c.user?.firstName} {c.user?.lastName}
                 </p>
                 <p className="text-gray-700 text-sm">{c.text}</p>
               </div>
 
               {/* Actions */}
               <div className="flex justify-between items-center text-xs text-gray-500 mt-1 ml-2">
-                {/* Left */}
                 <div className="flex gap-4">
                   <button
                     onClick={() => handleLike(c._id, "comment")}
@@ -113,15 +140,14 @@ export default function CommentSection({ postId }: any) {
                   <span>{formatTime(c.createdAt)}</span>
                 </div>
 
-                {/* Right (Like Count) */}
                 <div className="flex items-center gap-1">
-                  {c.likesCount > 0 && (
+                  {c.totalLikes > 0 && (
                     <>
-                      <span>{c.likesCount}</span>
+                      <span>{c.totalLikes}</span>
                       <Heart
                         size={14}
                         className={
-                          c.isLiked
+                          c.likedByMe
                             ? "text-red-500 fill-red-500"
                             : ""
                         }
@@ -131,26 +157,44 @@ export default function CommentSection({ postId }: any) {
                 </div>
               </div>
 
+              {/* Reply Input */}
+              <div className="ml-4 mt-2 flex gap-2">
+                <input
+                  className="flex-1 bg-gray-200 px-3 py-1 rounded-full outline-none"
+                  placeholder="Write a reply..."
+                  value={replyText[c._id] || ""}
+                  onChange={(e) =>
+                    setReplyText({
+                      ...replyText,
+                      [c._id]: e.target.value,
+                    })
+                  }
+                />
+                <button
+                  onClick={() => handleReply(c._id)}
+                  className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs"
+                >
+                  Reply
+                </button>
+              </div>
+
               {/* Replies */}
               <div className="mt-3 ml-4 space-y-3">
                 {c.replies?.map((r: any) => (
                   <div key={r._id} className="flex gap-2">
-                    {/* Avatar */}
                     <div className="w-7 h-7 rounded-full bg-green-400 flex items-center justify-center text-white text-xs font-bold">
-                      {r.author?.name?.charAt(0) || "U"}
+                      {r.user?.firstName?.charAt(0) || "U"}
                     </div>
 
                     <div className="flex-1">
                       <div className="bg-gray-50 p-2 rounded-xl">
                         <p className="text-xs font-semibold">
-                          {r.author?.name || "User"}
+                          {r.user?.firstName} {r.user?.lastName}
                         </p>
                         <p className="text-sm">{r.text}</p>
                       </div>
 
-                      {/* Reply Actions */}
                       <div className="flex justify-between items-center text-xs text-gray-400 mt-1 ml-1">
-                        {/* Left */}
                         <div className="flex gap-3">
                           <button
                             onClick={() =>
@@ -160,21 +204,17 @@ export default function CommentSection({ postId }: any) {
                           >
                             Like
                           </button>
-                          <button className="hover:text-blue-400">
-                            Reply
-                          </button>
                           <span>{formatTime(r.createdAt)}</span>
                         </div>
 
-                        {/* Right */}
                         <div className="flex items-center gap-1">
-                          {r.likesCount > 0 && (
+                          {r.totalLikes > 0 && (
                             <>
-                              <span>{r.likesCount}</span>
+                              <span>{r.totalLikes}</span>
                               <Heart
                                 size={12}
                                 className={
-                                  r.isLiked
+                                  r.likedByMe
                                     ? "text-red-500 fill-red-500"
                                     : ""
                                 }
