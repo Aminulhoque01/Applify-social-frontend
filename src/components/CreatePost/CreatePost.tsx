@@ -1,95 +1,134 @@
 "use client";
 
-import { useCreatePostMutation } from "@/src/redux/services/postApi";
-import { useRef, useState } from "react";
+import Image from "next/image";
+import { useRef } from "react";
+import {
+  useGetProfileQuery,
+  useUpdateProfileMutation,
+} from "@/src/redux/services/authApi";
+
+import { FaEdit } from "react-icons/fa";
+import { useDispatch } from "react-redux";
+import { useRouter } from "next/navigation";
+import { logout } from "@/src/redux/authSlice";
+
+import Editor from "../Editor";
 
 export default function CreatePost() {
-  const [createPost, { isLoading }] = useCreatePostMutation();
-  const [text, setText] = useState("");
-  const [image, setImage] = useState<File | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { data: userProfile, refetch } = useGetProfileQuery({});
+  const [updateProfile, { isLoading: updating }] =
+    useUpdateProfileMutation();
 
-  const handlePost = async () => {
-    if (!text.trim() && !image) return;
+  const profileInputRef = useRef<HTMLInputElement>(null);
+
+  const dispatch = useDispatch();
+  const router = useRouter();
+
+  // ✅ Logout
+  const handleLogout = () => {
+    dispatch(logout());
+    router.push("/login");
+  };
+
+  // ✅ Trigger file input click
+  const handleProfileClick = () => {
+    profileInputRef.current?.click();
+  };
+
+  // ✅ Handle file upload
+  const handleProfileChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("profileImage", file);
 
     try {
-      const formData = new FormData();
-      formData.append("text", text);
-      formData.append("isPrivate", "false");
-
-      if (image) {
-        formData.append("image", image);
-      }
-
-      await createPost(formData).unwrap();
-
-      setText("");
-      setImage(null);
+      await updateProfile(formData).unwrap();
+      refetch(); // refresh profile after update
     } catch (err) {
       console.error(err);
     }
   };
 
-  const handleImageClick = () => {
-    fileInputRef.current?.click();
-  };
-
   return (
-    <div className="max-w-xl mx-auto mt-6 p-4 bg-white rounded-2xl shadow-md border border-gray-100">
-      <h2 className="font-semibold text-gray-800 mb-3">
-        Create Post
-      </h2>
+    <div className="max-w-2xl mx-auto mt-6 space-y-4">
+      {/* PROFILE HEADER */}
+      <div className="bg-white p-4 rounded-2xl shadow border">
+        {/* Top Header */}
+        <div className="flex items-center justify-between">
+          {/* Left */}
+          <div className="flex items-center gap-3">
+            {/* Profile Image */}
+            <div
+              onClick={handleProfileClick}
+              className="cursor-pointer relative"
+            >
+              <Image
+                src={
+                  userProfile?.data?.profileImage ||
+                  "/default-avatar.png"
+                }
+                width={56}
+                height={56}
+                alt="profile"
+                className="rounded-full object-cover w-14 h-14 border"
+              />
 
-      <textarea
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        placeholder="What's on your mind?"
-        className="w-full h-28 p-3 border border-gray-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
+              {/* Edit Icon */}
+              <span className="absolute bottom-0 right-0 bg-gray-600 text-white text-xs px-1 rounded-full">
+                <FaEdit className="text-[14px]" />
+              </span>
+            </div>
 
-      {/* Hidden file input */}
-      <input
-        type="file"
-        accept="image/*"
-        ref={fileInputRef}
-        className="hidden"
-        onChange={(e) => {
-          if (e.target.files?.[0]) {
-            setImage(e.target.files[0]);
-          }
-        }}
-      />
+            {/* User Info */}
+            <div>
+              <h2 className="text-lg font-semibold text-gray-800">
+                {userProfile?.data?.firstName}{" "}
+                {userProfile?.data?.lastName}
+              </h2>
 
-      {/* Upload button */}
-      <div className="flex items-center justify-between mt-4">
-        <button
-          type="button"
-          onClick={handleImageClick}
-          className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium"
-        >
-          Upload Image
-        </button>
+              <p className="text-sm text-gray-500">
+                Welcome to{" "}
+                <span className="font-semibold text-blue-600">
+                  Applify Social
+                </span>{" "}
+                👋
+              </p>
 
-        <button
-          onClick={handlePost}
-          disabled={isLoading || (!text.trim() && !image)}
-          className={`px-5 py-2 rounded-xl font-medium text-white transition
-            ${
-              isLoading || (!text.trim() && !image)
-                ? "bg-blue-300 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700 active:scale-95"
-            }`}
-        >
-          {isLoading ? "Posting..." : "Post"}
-        </button>
+              {updating && (
+                <p className="text-xs text-gray-400">
+                  Updating photo...
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Logout */}
+          <button
+            onClick={handleLogout}
+            className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition"
+          >
+            Logout
+          </button>
+        </div>
+
+        {/* Hidden File Input */}
+        <input
+          type="file"
+          ref={profileInputRef}
+          accept="image/*"
+          className="hidden"
+          onChange={handleProfileChange}
+        />
+
+        {/* Post Box */}
+        <div className="pt-4">
+          <Editor />
+        </div>
       </div>
-
-      {/* Show selected image name */}
-      {image && (
-        <p className="text-sm text-gray-600 mt-2">
-          Selected: {image.name}
-        </p>
-      )}
     </div>
   );
 }

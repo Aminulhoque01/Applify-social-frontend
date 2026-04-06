@@ -1,8 +1,5 @@
-"use client";
 import "./globals.css";
-import { Provider } from "react-redux";
-import { store } from "../redux/store";
- 
+import ProviderWrapper from "../redux/ProviderWrapper";
 
 export default function RootLayout({
   children,
@@ -10,9 +7,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html>
-      <body>
-        <Provider store={store}>{children}</Provider>
+    <html lang="en">
+      <body suppressHydrationWarning>
+        <ProviderWrapper>{children}</ProviderWrapper>
       </body>
     </html>
   );

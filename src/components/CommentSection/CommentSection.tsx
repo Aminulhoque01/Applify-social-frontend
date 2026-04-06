@@ -8,6 +8,7 @@ import {
 import { useToggleLikeMutation } from "@/src/redux/services/likeApi";
 import { useState } from "react";
 import { Heart } from "lucide-react";
+import Image from "next/image";
 
 export default function CommentSection({ postId }: any) {
   const { data, isLoading } = useGetCommentsQuery(postId);
@@ -80,14 +81,20 @@ export default function CommentSection({ postId }: any) {
           <div key={c._id} className="flex gap-3">
             {/* Avatar */}
             <div className="w-9 h-9 rounded-full bg-blue-400 flex items-center justify-center text-white font-bold">
-              {c.author?.name?.charAt(0) || "U"}
+               <Image
+                src={c.user?.profileImage }
+                width={45}
+                height={45}
+                alt="profile"
+                className="rounded-full object-cover w-11 h-11"
+              />
             </div>
 
             {/* Content */}
             <div className="flex-1">
               <div className="bg-gray-100 p-3 rounded-2xl">
                 <p className="text-sm font-semibold text-gray-800">
-                  {c.author?.name || "Unknown User"}
+                  {c.user?.firstName } {c.user?.lastName }
                 </p>
                 <p className="text-gray-700 text-sm">{c.text}</p>
               </div>

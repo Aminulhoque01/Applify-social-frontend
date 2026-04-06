@@ -19,28 +19,23 @@ export default function Login() {
 
   const submit = async () => {
     try {
-      const res: any = await login(form);
+      const res: any = await login(form).unwrap();
 
-      if (res?.data) {
-        localStorage.setItem("token", res.data.data.token);
-        router.push("/");
-      }
+      localStorage.setItem("token", res.data.token);
+
+      router.replace("/");
     } catch (err) {
-      console.log(err);
+      console.log("Login failed:", err);
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-sky-200 to-white">
-      
       <div className="w-[360px] bg-white/70 backdrop-blur-xl shadow-xl rounded-3xl p-8 border">
-        
-        {/* Title */}
         <h2 className="text-xl font-semibold text-center text-gray-800">
           Sign in with email
         </h2>
 
-        {/* Email */}
         <div className="mt-5">
           <label className="text-sm text-gray-600">Email</label>
           <input
@@ -54,7 +49,6 @@ export default function Login() {
           />
         </div>
 
-        {/* Password */}
         <div className="mt-4 relative">
           <label className="text-sm text-gray-600">Password</label>
           <input
@@ -67,7 +61,6 @@ export default function Login() {
             className="w-full mt-1 px-4 py-2 pr-10 rounded-lg bg-gray-100 border focus:outline-none focus:ring-2 focus:ring-gray-300"
           />
 
-          {/* Eye Icon */}
           <span
             onClick={() => setShowPassword(!showPassword)}
             className="absolute right-3 top-9 cursor-pointer text-gray-600"
@@ -76,21 +69,18 @@ export default function Login() {
           </span>
         </div>
 
-        {/* Forgot */}
         <div className="text-right text-xs text-gray-500 mt-2 cursor-pointer hover:underline">
           Forgot password?
         </div>
 
-        {/* Button */}
         <button
           onClick={submit}
           disabled={isLoading}
-          className="w-full mt-5 bg-gray-900 text-white py-2 rounded-lg hover:opacity-90"
+          className="w-full mt-5 bg-gray-900 text-white py-2 rounded-lg hover:opacity-90 disabled:opacity-50"
         >
           {isLoading ? "Signing in..." : "Get Started"}
         </button>
 
-        {/* Footer */}
         <p className="text-xs text-center text-gray-500 mt-5">
           Don’t have an account?{" "}
           <span

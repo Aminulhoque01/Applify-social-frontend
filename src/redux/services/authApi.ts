@@ -19,7 +19,26 @@ export const authApi = baseApi.injectEndpoints({
         body: data,
       }),
     }),
+
+    // 👉 Get profile
+    getProfile: builder.query({
+      query: () => ({
+        url: "/auth/me",
+        method: "GET",
+      }),
+      providesTags: ["user"],
+    }),
+
+    // 👉 Update profile
+    updateProfile: builder.mutation({
+      query: (formData) => ({
+        url: "/auth/",
+        method: "PUT",
+        body: formData, // ⚠️ FormData
+      }),
+      invalidatesTags: ["user"],
+    }),
   }),
 });
 
-export const { useRegisterMutation, useLoginMutation } = authApi;
+export const { useRegisterMutation, useLoginMutation, useGetProfileQuery, useUpdateProfileMutation } = authApi;

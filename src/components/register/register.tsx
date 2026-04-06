@@ -25,7 +25,7 @@ export default function Register() {
 
       if (res?.data) {
         localStorage.setItem("token", res.data.data.token);
-        router.push("/feed");
+        router.push("/login");
       }
     } catch (err) {
       console.log(err);
