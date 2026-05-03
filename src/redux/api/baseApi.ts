@@ -4,7 +4,7 @@ export const baseApi = createApi({
   reducerPath: "api",
 
   baseQuery: fetchBaseQuery({
-    baseUrl: `https://applify-social-backend.vercel.app/api`,
+    baseUrl: `http://localhost:5000/api`,
 
     prepareHeaders: (headers) => {
       if (typeof window !== "undefined") {
@@ -18,7 +18,7 @@ export const baseApi = createApi({
     },
   }),
 
-  tagTypes: ["user" ,"post", "comment", "Like"],
+  tagTypes: ["user" ,"post", "comment", "Like","notification", "follow","chat"],
 
   endpoints: () => ({}),
 });
