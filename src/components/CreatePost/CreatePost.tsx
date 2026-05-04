@@ -1,13 +1,17 @@
 "use client";
 
 import Image from "next/image";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
+import { FaEdit, FaBell } from "react-icons/fa";
+import Link from "next/link";
+
 import {
   useGetProfileQuery,
   useUpdateProfileMutation,
 } from "@/src/redux/services/authApi";
 
-import { FaEdit } from "react-icons/fa";
+import { useNotification } from "@/src/hooks/useNotification";
+
 import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { logout } from "@/src/redux/authSlice";
@@ -19,23 +23,47 @@ export default function CreatePost() {
   const [updateProfile, { isLoading: updating }] =
     useUpdateProfileMutation();
 
+  const { count } = useNotification();
+
+  const [openNotif, setOpenNotif] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null);
   const profileInputRef = useRef<HTMLInputElement>(null);
 
   const dispatch = useDispatch();
   const router = useRouter();
 
-  // ✅ Logout
+  const user = userProfile?.data?.user;
+  const followersCount = userProfile?.data?.followersCount || 0;
+  const followingCount = userProfile?.data?.followingCount || 0;
+
+  // 🔴 CLOSE DROPDOWN ON OUTSIDE CLICK
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        notifRef.current &&
+        !notifRef.current.contains(event.target as Node)
+      ) {
+        setOpenNotif(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () =>
+      document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // logout
   const handleLogout = () => {
     dispatch(logout());
     router.push("/login");
   };
 
-  // ✅ Trigger file input click
+  // profile click
   const handleProfileClick = () => {
     profileInputRef.current?.click();
   };
 
-  // ✅ Handle file upload
+  // update profile image
   const handleProfileChange = async (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -45,77 +73,143 @@ export default function CreatePost() {
     const formData = new FormData();
     formData.append("profileImage", file);
 
-    try {
-      await updateProfile(formData).unwrap();
-      refetch(); // refresh profile after update
-    } catch (err) {
-      console.error(err);
-    }
+    await updateProfile(formData).unwrap();
+    refetch();
   };
 
   return (
     <div className="max-w-2xl mx-auto mt-6 space-y-4">
-      {/* PROFILE HEADER */}
+
+      {/* HEADER */}
       <div className="bg-white p-4 rounded-2xl shadow border">
-        {/* Top Header */}
+
         <div className="flex items-center justify-between">
-          {/* Left */}
-          <div className="flex items-center gap-3">
-            {/* Profile Image */}
+
+          {/* LEFT → PROFILE */}
+          <div className="flex items-center gap-4">
+
+            {/* Avatar */}
             <div
               onClick={handleProfileClick}
-              className="cursor-pointer relative"
+              className="relative w-12 h-12 cursor-pointer"
             >
               <Image
-                src={
-                  userProfile?.data?.profileImage ||
-                  "/default-avatar.png"
-                }
-                width={56}
-                height={56}
+                src={user?.profileImage || "/default-avatar.png"}
                 alt="profile"
-                className="rounded-full object-cover w-14 h-14 border"
+                fill
+                className="rounded-full object-cover border"
               />
 
-              {/* Edit Icon */}
-              <span className="absolute bottom-0 right-0 bg-gray-600 text-white text-xs px-1 rounded-full">
-                <FaEdit className="text-[14px]" />
+              <span className="absolute bottom-0 right-0 bg-gray-600 text-white text-[10px] p-1 rounded-full">
+                <FaEdit />
               </span>
             </div>
 
-            {/* User Info */}
-            <div>
-              <h2 className="text-lg font-semibold text-gray-800">
-                {userProfile?.data?.firstName}{" "}
-                {userProfile?.data?.lastName}
+            {/* NAME + STATS */}
+            <div className="flex flex-col">
+
+              <h2 className="text-sm font-semibold text-gray-800">
+                {user?.firstName} {user?.lastName}
               </h2>
 
-              <p className="text-sm text-gray-500">
-                Welcome to{" "}
-                <span className="font-semibold text-blue-600">
-                  Applify Social
-                </span>{" "}
-                👋
+              <p className="text-xs text-gray-500">
+                Welcome back 👋
               </p>
 
+              <div className="flex items-center gap-2 mt-1">
+
+                <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full">
+                  <b>{followersCount}</b> Followers
+                </span>
+
+                <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full">
+                  <b>{followingCount}</b> Following
+                </span>
+
+              </div>
+
               {updating && (
-                <p className="text-xs text-gray-400">
-                  Updating photo...
+                <p className="text-[10px] text-gray-400 mt-1">
+                  Updating profile...
                 </p>
               )}
+
             </div>
           </div>
 
-          {/* Logout */}
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition"
-          >
-            Logout
-          </button>
+          {/* RIGHT → NOTIFICATION + LOGOUT */}
+          <div className="flex items-center gap-3">
+
+            {/* 🔔 NOTIFICATION DROPDOWN */}
+            <div className="relative" ref={notifRef}>
+
+              {/* ICON */}
+              <div
+                onClick={() => setOpenNotif(!openNotif)}
+                className="relative p-2 rounded-full hover:bg-gray-100 cursor-pointer"
+              >
+                <FaBell className="text-xl text-gray-700" />
+
+                {count > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] px-1.5 rounded-full">
+                    {count}
+                  </span>
+                )}
+              </div>
+
+              {/* DROPDOWN */}
+              {openNotif && (
+                <div className="absolute right-0 mt-2 w-80 bg-white border shadow-xl rounded-xl z-50">
+
+                  {/* HEADER */}
+                  <div className="p-3 border-b font-semibold text-sm">
+                    Notifications
+                  </div>
+
+                  {/* LIST */}
+                  <div className="max-h-80 overflow-y-auto">
+
+                    <div className="p-3 text-sm hover:bg-gray-50 border-b">
+                      🔔 Someone followed you
+                    </div>
+
+                    <div className="p-3 text-sm hover:bg-gray-50 border-b">
+                      ❤️ Someone liked your post
+                    </div>
+
+                    <div className="p-3 text-sm hover:bg-gray-50 border-b">
+                      💬 New comment on your post
+                    </div>
+
+                  </div>
+
+                  {/* FOOTER */}
+                  <Link href="/notifications">
+                    <div
+                      onClick={() => setOpenNotif(false)}
+                      className="text-center py-2 text-blue-500 hover:bg-gray-100 text-sm cursor-pointer"
+                    >
+                      View all notifications
+                    </div>
+                  </Link>
+
+                </div>
+              )}
+
+            </div>
+
+            {/* LOGOUT */}
+            <button
+              onClick={handleLogout}
+              className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm"
+            >
+              Logout
+            </button>
+
+          </div>
         </div>
 
-        {/* Hidden File Input */}
+        {/* hidden input */}
         <input
           type="file"
           ref={profileInputRef}
@@ -124,10 +218,11 @@ export default function CreatePost() {
           onChange={handleProfileChange}
         />
 
-        {/* Post Box */}
+        {/* POST EDITOR */}
         <div className="pt-4">
           <Editor />
         </div>
+
       </div>
     </div>
   );
