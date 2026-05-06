@@ -29,7 +29,7 @@ export const authApi = baseApi.injectEndpoints({
       providesTags: ["user"],
     }),
 
-    // 👉 Update profile
+      
     updateProfile: builder.mutation({
       query: (formData) => ({
         url: "/auth/",
