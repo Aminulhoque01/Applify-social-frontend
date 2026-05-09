@@ -28,6 +28,13 @@ export const authApi = baseApi.injectEndpoints({
       }),
       providesTags: ["user"],
     }),
+    getAllUser: builder.query({
+      query: () => ({
+        url: "/all-user",
+        method: "GET",
+      }),
+      providesTags: ["user"],
+    }),
 
       
     updateProfile: builder.mutation({
@@ -41,4 +48,4 @@ export const authApi = baseApi.injectEndpoints({
   }),
 });
 
-export const { useRegisterMutation, useLoginMutation, useGetProfileQuery, useUpdateProfileMutation } = authApi;
+export const { useRegisterMutation, useLoginMutation, useGetProfileQuery, useUpdateProfileMutation, useGetAllUserQuery } = authApi;
