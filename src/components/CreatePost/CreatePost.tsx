@@ -17,6 +17,11 @@ import { useRouter } from "next/navigation";
 import { logout } from "@/src/redux/authSlice";
 
 import Editor from "../Editor";
+import { useOnlineUsers } from "@/src/hooks/useOnlineUsers";
+
+ 
+
+
 
 export default function CreatePost() {
   const { data: userProfile, refetch } = useGetProfileQuery({});
@@ -35,6 +40,10 @@ export default function CreatePost() {
   const user = userProfile?.data?.user;
   const followersCount = userProfile?.data?.followersCount || 0;
   const followingCount = userProfile?.data?.followingCount || 0;
+
+
+  const onlineUsers = useOnlineUsers();
+  const isOnline = onlineUsers.includes(user?._id);
 
   // 🔴 CLOSE DROPDOWN ON OUTSIDE CLICK
   useEffect(() => {
@@ -90,20 +99,26 @@ export default function CreatePost() {
 
             {/* Avatar */}
             <div
-              onClick={handleProfileClick}
-              className="relative w-12 h-12 cursor-pointer"
-            >
-              <Image
-                src={user?.profileImage || "/default-avatar.png"}
-                alt="profile"
-                fill
-                className="rounded-full object-cover border"
-              />
+            onClick={handleProfileClick}
+            className="relative w-12 h-12 cursor-pointer"
+          >
+            <Image
+              src={user?.profileImage || "/default-avatar.png"}
+              alt="profile"
+              fill
+              className="rounded-full object-cover border"
+            />
 
-              <span className="absolute bottom-0 right-0 bg-gray-600 text-white text-[10px] p-1 rounded-full">
-                <FaEdit />
-              </span>
-            </div>
+            {/* 🟢 ONLINE */}
+            {isOnline && (
+              <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full" />
+            )}
+
+            {/* edit icon */}
+            <span className="absolute top-0 right-0 bg-gray-600 text-white text-[10px] p-1 rounded-full">
+              <FaEdit />
+            </span>
+          </div>
 
             {/* NAME + STATS */}
             <div className="flex flex-col">
