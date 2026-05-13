@@ -14,12 +14,15 @@ interface Props {
 export default function NotificationDropdown({ open, onClose }: Props) {
   const { data, refetch } = useGetNotificationsQuery("");
 
-  // 🔄 নতুন notification এলে list refresh
+  //  নতুন notification এলে list refresh
   useEffect(() => {
     const handler = () => refetch();
 
     socket.on("new-notification", handler);
-    return () => socket.off("new-notification", handler);
+
+    return () => {
+      socket.off("new-notification", handler);
+    };
   }, [refetch]);
 
   if (!open) return null;
