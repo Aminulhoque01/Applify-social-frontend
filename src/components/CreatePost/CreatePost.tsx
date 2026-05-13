@@ -45,7 +45,7 @@ export default function CreatePost() {
   const onlineUsers = useOnlineUsers();
   const isOnline = onlineUsers.includes(user?._id);
 
-  // 🔴 CLOSE DROPDOWN ON OUTSIDE CLICK
+  //  CLOSE DROPDOWN ON OUTSIDE CLICK
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
